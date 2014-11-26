@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Main</title>
+</head>
+<body>
+
+<#if !login?? >
+	<p><a href="/auth/signin">SignIn</a></p>
+<#else>
+	<p>Hello, <a href="/profile">${login}</a>. <a href="/auth/logout">Exit</a></p>
+</#if>
+
+</body>
+</html>
+

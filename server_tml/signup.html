@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Registration</title>
+</head>
+<body>
+
+<#if text?? >
+	<p>${text}<p>
+</#if>
+<#if error?? >
+	<p style="color: red">${error}<p>
+</#if>
+
+<form action="/auth/signup" method="POST">
+	<p>E-mail: &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp		<input type="text" name="email"/></p>
+    <p>Login: &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp	<input type="text" name="login"/></p>
+	<p>Password: &nbsp 							<input type="text" name="password"/></p>
+	<p><input type="submit" value="Registrate"></p>
+</form>
+
+<p><a href="/auth/signin">SignIn</a></p>
+
+</body>
+</html>
+

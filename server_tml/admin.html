@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Admin page</title>
+</head>
+<body>
+<p>Server administration page</p>
+<p>Server status: ${status}</p>
+<hr>
+<p>Count of users in database: ${CountOfUsersInDatabase}</p>
+<p>Count of users online: ${CountOfUsersOnline}</p>
+<hr>
+<#if warning?? >
+	<p style="color:red;"><#if login?? >${login}, </#if>${warning}</p>
+</#if>
+<form action="/admin" method="GET">
+	<p><input type="submit" name="Stop" value="Stop server!"><input type="text" name="shutdown" value="10" style="display:none;"></p>
+</form>
+
+</body>
+</html>
