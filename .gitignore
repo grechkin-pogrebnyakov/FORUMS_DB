@@ -50,3 +50,4 @@ node.exe
 .idea
 *.class
 target/
+*.jar
