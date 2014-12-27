@@ -26,7 +26,7 @@ import java.util.Properties;
         return instance;
     }
 
-    private static Connection getConnection() {
+    public static Connection getConnection() {
         try{
             DriverManager.registerDriver((Driver) Class.forName("com.mysql.jdbc.Driver").newInstance());
 
@@ -43,9 +43,9 @@ import java.util.Properties;
             properties.setProperty("password","12345");
             properties.setProperty("useUnicode","true");
             properties.setProperty("characterEncoding","UTF8");
-               //     append("user=forum_user&").			//login
-               //     append("password=12345").		//password
-               //     append("");
+            //     append("user=forum_user&").			//login
+            //     append("password=12345").		//password
+            //     append("");
             System.out.append("URL: " + url + "\n");
 
             Connection connection = DriverManager.getConnection(url.toString(), properties);
@@ -64,7 +64,6 @@ import java.util.Properties;
 
     public String clear(){
         try{
-            connection.setAutoCommit(false);
             String update = "Truncate ?";
             Statement stmt = connection.createStatement();
             stmt.execute("Truncate Forums");
@@ -74,15 +73,8 @@ import java.util.Properties;
             stmt.execute("Truncate ParentPosts");
             stmt.execute("Truncate Subscribers");
             stmt.execute("Truncate Follows");
-            connection.commit();
             stmt.close();
-            connection.setAutoCommit(true);
         } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
             e.printStackTrace();
         }
         return "OK";
@@ -144,8 +136,8 @@ import java.util.Properties;
             PreparedStatement stmt = connection.prepareStatement("SELECT * FROM Users WHERE user_email=?");
             stmt.setString(1, email);
             ResultSet result = stmt.executeQuery();
-            if (!result.isLast()) {
-                result.next();
+            if (result.next()) {
+
                 id = result.getInt("user_id");
                 about = result.getString("about");
                 isAn = result.getBoolean("isAnonymous");
@@ -405,7 +397,7 @@ import java.util.Properties;
     }
 
     public MyJSONObject createPost(String forum, Integer thread, Integer parent, Boolean isDeleted, Boolean isApproved,
-                            Boolean isEdited, Boolean isHighlighted, Boolean isSpam, String user, String date, String message){
+                                   Boolean isEdited, Boolean isHighlighted, Boolean isSpam, String user, String date, String message){
         int id = 0;
         try{
 //            connection.setAutoCommit(false);
@@ -519,7 +511,7 @@ import java.util.Properties;
                 if (rel_thread) {
                     thread = threadDetails(result.getInt("thread_id"),false, false);
                 } else {
-                     thread = result.getInt("thread_id");
+                    thread = result.getInt("thread_id");
                 }
                 if (rel_user) {
                     user = userDetails(result.getString("user_email"));
@@ -870,7 +862,6 @@ import java.util.Properties;
 
     public int removeThread(Integer thread_id) {
         try{
-            connection.setAutoCommit(false);
             PreparedStatement stmt = connection.prepareStatement("UPDATE Threads SET isDeleted=true WHERE thread_id=?");
             stmt.setInt(1, thread_id);
             int rez = stmt.executeUpdate();
@@ -879,15 +870,8 @@ import java.util.Properties;
             stmt.setInt(1, thread_id);
             stmt.executeUpdate();
             stmt.close();
-            connection.commit();
-            connection.setAutoCommit(true);
             return rez;
         } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
             e.printStackTrace();
         }
         return 0;
@@ -895,7 +879,6 @@ import java.util.Properties;
 
     public int restoreThread(Integer thread_id) {
         try {
-            connection.setAutoCommit(false);
             PreparedStatement stmt = connection.prepareStatement("UPDATE Threads SET isDeleted=false WHERE thread_id=?");
             stmt.setInt(1, thread_id);
             int rez = stmt.executeUpdate();
@@ -904,8 +887,6 @@ import java.util.Properties;
             stmt.setInt(1, thread_id);
             stmt.executeUpdate();
             stmt.close();
-            connection.commit();
-            connection.setAutoCommit(true);
             return rez;
         } catch (SQLException e) {
             try {
@@ -1339,7 +1320,7 @@ import java.util.Properties;
         String email;
         StringBuilder query =
                 new StringBuilder("SELECT user_id, about, isAnonymous, name, username, Users.user_email FROM " +
-                        "Users INNER JOIN Posts ON Users.user_email=Posts.user_email WHERE forum_shortname = ?");
+                        "Users LEFT JOIN Posts ON Users.user_email=Posts.user_email WHERE forum_shortname = ?");
         MyJSONArray rez = new MyJSONArray();
         try{
             PreparedStatement stmt;
