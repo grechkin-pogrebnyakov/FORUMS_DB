@@ -17,11 +17,9 @@ import utils.MyJSONObject;
  */
 public class UserDetailsServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public UserDetailsServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doGet(HttpServletRequest request,
@@ -33,7 +31,7 @@ public class UserDetailsServletImpl extends HttpServlet {
         String email = request.getParameter("user");
         if (email == null) {
             status = 3;
-            String st = responseMaker.makeResponse(status, "incorrect request");
+            String st = ResponseMaker.makeResponse(status, "incorrect request");
             response.getWriter().println(st);
             return;
         }
@@ -42,9 +40,9 @@ public class UserDetailsServletImpl extends HttpServlet {
         String st;
         if (resp == null) {
             status = 1;
-            st = responseMaker.makeResponse(status, "not found");
+            st = ResponseMaker.makeResponse(status, "not found");
         } else {
-            st = responseMaker.makeResponse(status, resp);
+            st = ResponseMaker.makeResponse(status, resp);
         }
 //        System.out.append("user details response: " + st + "\n");
         response.getWriter().print(st);

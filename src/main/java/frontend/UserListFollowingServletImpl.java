@@ -19,11 +19,9 @@ import java.util.Map;
  */
 public class UserListFollowingServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public UserListFollowingServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doGet(HttpServletRequest request,
@@ -35,7 +33,7 @@ public class UserListFollowingServletImpl extends HttpServlet {
         String user = request.getParameter("user");
         if (user == null) {
             status = 3;
-            String st = responseMaker.makeResponse(status, "incorrect request");
+            String st = ResponseMaker.makeResponse(status, "incorrect request");
             response.getWriter().println(st);
             return;
         }
@@ -61,14 +59,14 @@ public class UserListFollowingServletImpl extends HttpServlet {
             isAsc = true;
         } else {
             status = 3;
-            String st = responseMaker.makeResponse(status, "incorrect request");
+            String st = ResponseMaker.makeResponse(status, "incorrect request");
             response.getWriter().println(st);
             return;
         }
 //        System.out.append("user post list request: " + request.getParameterMap() + "\n");
         MyJSONArray resp = databaseService.userListFollowing(user, since_id, limit, isAsc);
         String st;
-        st = responseMaker.makeResponse(status, resp);
+        st = ResponseMaker.makeResponse(status, resp);
 //        System.out.append("user post list response: " + st + "\n");
         response.getWriter().print(st);
     }

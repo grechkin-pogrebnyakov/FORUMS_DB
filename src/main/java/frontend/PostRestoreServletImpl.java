@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class PostRestoreServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public PostRestoreServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -46,7 +44,7 @@ public class PostRestoreServletImpl extends HttpServlet {
                 post_id = new Integer(post);
             } else {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "post id required");
+                String st = ResponseMaker.makeResponse(status, "post id required");
                 response.getWriter().print(st);
                 return;
             }
@@ -55,17 +53,17 @@ public class PostRestoreServletImpl extends HttpServlet {
             String st;
             if (res == 0) {
                 status = 1;
-                st = responseMaker.makeResponse(status, "post not found");
+                st = ResponseMaker.makeResponse(status, "post not found");
             } else {
                 MyJSONObject resp = new MyJSONObject();
                 resp.put("post", post_id);
-                st = responseMaker.makeResponse(status, resp);
+                st = ResponseMaker.makeResponse(status, resp);
             }
 //            System.out.append("post remove response: " + st + "\n");
             response.getWriter().print(st);
         } else {
             status = 2;
-            String st = responseMaker.makeResponse(status, "impossible to parse json");
+            String st = ResponseMaker.makeResponse(status, "impossible to parse json");
             response.getWriter().print(st);
         }
     }

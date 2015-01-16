@@ -16,11 +16,9 @@ import java.io.IOException;
  */
 public class ForumDetailsServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public ForumDetailsServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doGet(HttpServletRequest request,
@@ -33,12 +31,12 @@ public class ForumDetailsServletImpl extends HttpServlet {
         String ru = request.getParameter("related");
         if (short_name == null) {
             status = 3;
-            String st = responseMaker.makeResponse(status, "incorrect request");
+            String st = ResponseMaker.makeResponse(status, "incorrect request");
             response.getWriter().println(st);
             return;
         }
         boolean rel_user = false;
-        if (ru.equals("user")) {
+        if (ru != null && ru.equals("user")) {
             rel_user = true;
         }
 //        System.out.append("forum details request: " + request.getParameterMap().toString() + "\n");
@@ -46,9 +44,9 @@ public class ForumDetailsServletImpl extends HttpServlet {
         String st;
         if (resp == null) {
             status = 1;
-            st = responseMaker.makeResponse(status, "not found");
+            st = ResponseMaker.makeResponse(status, "not found");
         } else {
-            st = responseMaker.makeResponse(status, resp);
+            st = ResponseMaker.makeResponse(status, resp);
         }
 //        System.out.append("forum details response: " + st + "\n");
         response.getWriter().print(st);

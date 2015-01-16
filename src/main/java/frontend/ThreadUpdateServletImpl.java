@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class ThreadUpdateServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public ThreadUpdateServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -45,13 +43,13 @@ public class ThreadUpdateServletImpl extends HttpServlet {
             String slug = foo.get("slug");
             if (message == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "message required");
+                String st = ResponseMaker.makeResponse(status, "message required");
                 response.getWriter().print(st);
                 return;
             }
             if (slug == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "slug required");
+                String st = ResponseMaker.makeResponse(status, "slug required");
                 response.getWriter().print(st);
                 return;
             }
@@ -62,13 +60,13 @@ public class ThreadUpdateServletImpl extends HttpServlet {
                 } catch (NumberFormatException e){
                     e.printStackTrace();
                     status = 3;
-                    String st = responseMaker.makeResponse(status, "thread id required");
+                    String st = ResponseMaker.makeResponse(status, "thread id required");
                     response.getWriter().print(st);
                     return;
                 }
             } else {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "thread id required");
+                String st = ResponseMaker.makeResponse(status, "thread id required");
                 response.getWriter().print(st);
                 return;
             }
@@ -77,15 +75,15 @@ public class ThreadUpdateServletImpl extends HttpServlet {
             String st;
             if (resp == null) {
                 status = 1;
-                st = responseMaker.makeResponse(status, "thread not found");
+                st = ResponseMaker.makeResponse(status, "thread not found");
             } else {
-                st = responseMaker.makeResponse(status, resp);
+                st = ResponseMaker.makeResponse(status, resp);
             }
 
             response.getWriter().print(st);
         } else {
             status = 2;
-            String st = responseMaker.makeResponse(status, "impossible to parse json");
+            String st = ResponseMaker.makeResponse(status, "impossible to parse json");
             response.getWriter().print(st);
         }
     }

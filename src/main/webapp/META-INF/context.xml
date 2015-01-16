@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Context>
+
+    <Resource
+        name="jdbc/FORUMS_TP"
+        auth="Container"
+        type="javax.sql.DataSource"
+        testWhileIdle="false"
+        testOnBorrow="false"
+        testOnReturn="false"
+        validationQuery="SELECT 1"
+        validationInterval="30000"
+        timeBetweenEvictionRunsMillis="30000"
+        maxActive="200"
+        minIdle="100"
+        maxWait="300000"
+        initialSize="100"
+        removeAbandonedTimeout="30"
+        removeAbandoned="true"
+        logAbandoned="true"
+        minEvictableIdleTimeMillis="30000"
+        jmxEnabled="true"
+        username="forum_user"
+        password="12345"
+        connectionProperties="useUnicode=true;characterEncoding=UTF8;"
+        driverClassName="com.mysql.jdbc.Driver"
+        url="jdbc:mysql://localhost:3306/FORUMS_TP"/>
+    />
+</Context>

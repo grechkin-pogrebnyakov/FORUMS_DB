@@ -19,11 +19,9 @@ import java.util.Map;
  */
 public class ThreadListServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public ThreadListServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doGet(HttpServletRequest request,
@@ -42,7 +40,7 @@ public class ThreadListServletImpl extends HttpServlet {
         }
         if (parent == null) {
             status = 3;
-            String st = responseMaker.makeResponse(status, "incorrect request");
+            String st = ResponseMaker.makeResponse(status, "incorrect request");
             response.getWriter().println(st);
             return;
         }
@@ -62,14 +60,14 @@ public class ThreadListServletImpl extends HttpServlet {
             isAsc = true;
         } else {
             status = 3;
-            String st = responseMaker.makeResponse(status, "incorrect request");
+            String st = ResponseMaker.makeResponse(status, "incorrect request");
             response.getWriter().println(st);
             return;
         }
 //        System.out.append("post list request: " + request.getParameterMap() + "\n");
         MyJSONArray resp = databaseService.threadList(parent, user_set, false, false, since, limit, isAsc);
         String st;
-        st = responseMaker.makeResponse(status, resp);
+        st = ResponseMaker.makeResponse(status, resp);
 //        System.out.append("post list response: " + st + "\n");
         response.getWriter().print(st);
     }

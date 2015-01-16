@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class UserUpdateProfileServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public UserUpdateProfileServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -45,19 +43,19 @@ public class UserUpdateProfileServletImpl extends HttpServlet {
             String about = foo.get("about");
             if (email == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "email required");
+                String st = ResponseMaker.makeResponse(status, "email required");
                 response.getWriter().print(st);
                 return;
             }
             if (name == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "name required");
+                String st = ResponseMaker.makeResponse(status, "name required");
                 response.getWriter().print(st);
                 return;
             }
             if (about == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "about required");
+                String st = ResponseMaker.makeResponse(status, "about required");
                 response.getWriter().print(st);
                 return;
             }
@@ -66,15 +64,15 @@ public class UserUpdateProfileServletImpl extends HttpServlet {
             String st;
             if (resp == null) {
                 status = 1;
-                st = responseMaker.makeResponse(status, "thread not found");
+                st = ResponseMaker.makeResponse(status, "thread not found");
             } else {
-                st = responseMaker.makeResponse(status, resp);
+                st = ResponseMaker.makeResponse(status, resp);
             }
 
             response.getWriter().print(st);
         } else {
             status = 2;
-            String st = responseMaker.makeResponse(status, "impossible to parse json");
+            String st = ResponseMaker.makeResponse(status, "impossible to parse json");
             response.getWriter().print(st);
         }
     }

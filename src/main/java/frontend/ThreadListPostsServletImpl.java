@@ -19,11 +19,9 @@ import java.util.Map;
  */
 public class ThreadListPostsServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public ThreadListPostsServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doGet(HttpServletRequest request,
@@ -40,13 +38,13 @@ public class ThreadListPostsServletImpl extends HttpServlet {
             } catch (NumberFormatException e){
                 e.printStackTrace();
                 status = 3;
-                String st = responseMaker.makeResponse(status, "thread id required");
+                String st = ResponseMaker.makeResponse(status, "thread id required");
                 response.getWriter().print(st);
                 return;
             }
         } else {
             status = 3;
-            String st = responseMaker.makeResponse(status, "thread id required");
+            String st = ResponseMaker.makeResponse(status, "thread id required");
             response.getWriter().print(st);
             return;
         }
@@ -66,7 +64,7 @@ public class ThreadListPostsServletImpl extends HttpServlet {
             isAsc = true;
         } else {
             status = 3;
-            String st = responseMaker.makeResponse(status, "incorrect request");
+            String st = ResponseMaker.makeResponse(status, "incorrect request");
             response.getWriter().println(st);
             return;
         }
@@ -91,13 +89,13 @@ public class ThreadListPostsServletImpl extends HttpServlet {
             }
             default : {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "incorrect request");
+                String st = ResponseMaker.makeResponse(status, "incorrect request");
                 response.getWriter().println(st);
                 return;
             }
         }
         String st;
-        st = responseMaker.makeResponse(status, resp);
+        st = ResponseMaker.makeResponse(status, resp);
 //        System.out.append("post list response: " + st + "\n");
         response.getWriter().print(st);
     }

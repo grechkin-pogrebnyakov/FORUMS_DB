@@ -16,11 +16,9 @@ import java.io.IOException;
  */
 public class ThreadDetailsServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public ThreadDetailsServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doGet(HttpServletRequest request,
@@ -33,7 +31,7 @@ public class ThreadDetailsServletImpl extends HttpServlet {
         String[] related = request.getParameterValues("related");
         if (thread == null) {
             status = 3;
-            String st = responseMaker.makeResponse(status, "incorrect request");
+            String st = ResponseMaker.makeResponse(status, "incorrect request");
             response.getWriter().println(st);
             return;
         }
@@ -47,7 +45,7 @@ public class ThreadDetailsServletImpl extends HttpServlet {
                 rel_forum = true;
             } else {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "incorrect request");
+                String st = ResponseMaker.makeResponse(status, "incorrect request");
                 response.getWriter().println(st);
                 return;
             }
@@ -58,9 +56,9 @@ public class ThreadDetailsServletImpl extends HttpServlet {
         String st;
         if (resp == null) {
             status = 1;
-            st = responseMaker.makeResponse(status, "not found");
+            st = ResponseMaker.makeResponse(status, "not found");
         } else {
-            st = responseMaker.makeResponse(status, resp);
+            st = ResponseMaker.makeResponse(status, resp);
         }
 //        System.out.append("thread details response: " + st + "\n");
         response.getWriter().print(st);

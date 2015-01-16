@@ -15,11 +15,9 @@ import java.io.IOException;
  */
 public class ClearServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public ClearServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -29,7 +27,7 @@ public class ClearServletImpl extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         //response.setCharacterEncoding("utf-8");
         response.setContentType("application/json");
-        response.getWriter().println(responseMaker.makeResponse(status, result));
+        response.getWriter().println(ResponseMaker.makeResponse(status, result));
     }
 
     public void doGet(HttpServletRequest request,
@@ -39,6 +37,6 @@ public class ClearServletImpl extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         //response.setCharacterEncoding("utf-8");
         response.setContentType("application/json");
-        response.getWriter().println(responseMaker.makeResponse(status, result));
+        response.getWriter().println(ResponseMaker.makeResponse(status, result));
     }
 }

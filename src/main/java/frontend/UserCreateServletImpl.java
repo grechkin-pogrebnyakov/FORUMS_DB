@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class UserCreateServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public UserCreateServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -53,7 +51,7 @@ public class UserCreateServletImpl extends HttpServlet {
             String email = foo.get("email");
             if (email == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "email required");
+                String st = ResponseMaker.makeResponse(status, "email required");
                 response.getWriter().print(st);
                 return;
             }
@@ -62,9 +60,9 @@ public class UserCreateServletImpl extends HttpServlet {
             String st;
             if (resp == null) {
                 status = 5;
-                st = responseMaker.makeResponse(status, "user exists");
+                st = ResponseMaker.makeResponse(status, "user exists");
             } else {
-                st = responseMaker.makeResponse(status, resp);
+                st = ResponseMaker.makeResponse(status, resp);
             }
 
                     //    String st = "{\"code\": 0, \"response\": {\"about\": \"" + about + "\", \"email\": \""+email+"\", \"id\": 1, \"isAnonymous\": "+anonymous.toString()+", \"name\": \""+name+"\", \"username\": \""+username+"\"}}";
@@ -72,7 +70,7 @@ public class UserCreateServletImpl extends HttpServlet {
             response.getWriter().print(st);
         } else {
             status = 2;
-            String st = responseMaker.makeResponse(status, "impossible to parse json");
+            String st = ResponseMaker.makeResponse(status, "impossible to parse json");
             response.getWriter().print(st);
         }
     }

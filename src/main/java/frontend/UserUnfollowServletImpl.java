@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class UserUnfollowServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public UserUnfollowServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -45,13 +43,13 @@ public class UserUnfollowServletImpl extends HttpServlet {
             Integer thread_id;
             if (follower == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "follower required");
+                String st = ResponseMaker.makeResponse(status, "follower required");
                 response.getWriter().print(st);
                 return;
             }
             if (followee == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "followee required");
+                String st = ResponseMaker.makeResponse(status, "followee required");
                 response.getWriter().print(st);
                 return;
             }
@@ -59,15 +57,15 @@ public class UserUnfollowServletImpl extends HttpServlet {
             String st;
             if (resp == null) {
                 status = 1;
-                st = responseMaker.makeResponse(status, "follower not found");
+                st = ResponseMaker.makeResponse(status, "follower not found");
             } else {
-                st = responseMaker.makeResponse(status, resp);
+                st = ResponseMaker.makeResponse(status, resp);
             }
 
             response.getWriter().print(st);
         } else {
             status = 2;
-            String st = responseMaker.makeResponse(status, "impossible to parse json");
+            String st = ResponseMaker.makeResponse(status, "impossible to parse json");
             response.getWriter().print(st);
         }
     }

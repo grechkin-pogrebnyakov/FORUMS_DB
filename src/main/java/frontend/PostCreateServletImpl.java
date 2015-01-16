@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class PostCreateServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public PostCreateServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -87,7 +85,7 @@ public class PostCreateServletImpl extends HttpServlet {
             String message = foo.get("message");
             if (forum == null || thread == null || user == null || date == null || message == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "not all required fields set");
+                String st = ResponseMaker.makeResponse(status, "not all required fields set");
                 response.getWriter().print(st);
                 return;
             }
@@ -96,9 +94,9 @@ public class PostCreateServletImpl extends HttpServlet {
             String st;
             if (resp == null) {
                 status = 5;
-                st = responseMaker.makeResponse(status, "user exists");
+                st = ResponseMaker.makeResponse(status, "user exists");
             } else {
-                st = responseMaker.makeResponse(status, resp);
+                st = ResponseMaker.makeResponse(status, resp);
             }
 
             //    String st = "{\"code\": 0, \"response\": {\"about\": \"" + about + "\", \"email\": \""+email+"\", \"id\": 1, \"isAnonymous\": "+anonymous.toString()+", \"name\": \""+name+"\", \"username\": \""+username+"\"}}";
@@ -106,7 +104,7 @@ public class PostCreateServletImpl extends HttpServlet {
             response.getWriter().print(st);
         } else {
             status = 2;
-            String st = responseMaker.makeResponse(status, "impossible to parse json");
+            String st = ResponseMaker.makeResponse(status, "impossible to parse json");
             response.getWriter().print(st);
         }
     }

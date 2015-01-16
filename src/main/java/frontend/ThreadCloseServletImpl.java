@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class ThreadCloseServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public ThreadCloseServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -46,7 +44,7 @@ public class ThreadCloseServletImpl extends HttpServlet {
                 thread_id = new Integer(thread);
             } else {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "thread id required");
+                String st = ResponseMaker.makeResponse(status, "thread id required");
                 response.getWriter().print(st);
                 return;
             }
@@ -55,17 +53,17 @@ public class ThreadCloseServletImpl extends HttpServlet {
             String st;
             if (res == 0) {
                 status = 1;
-                st = responseMaker.makeResponse(status, "thread not found");
+                st = ResponseMaker.makeResponse(status, "thread not found");
             } else {
                 MyJSONObject resp = new MyJSONObject();
                 resp.put("thread", thread_id);
-                st = responseMaker.makeResponse(status, resp);
+                st = ResponseMaker.makeResponse(status, resp);
             }
 //            System.out.append("thread remove response: " + st + "\n");
             response.getWriter().print(st);
         } else {
             status = 2;
-            String st = responseMaker.makeResponse(status, "impossible to parse json");
+            String st = ResponseMaker.makeResponse(status, "impossible to parse json");
             response.getWriter().print(st);
         }
     }

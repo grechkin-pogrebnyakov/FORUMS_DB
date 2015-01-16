@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class PostUpdateServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public PostUpdateServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -44,7 +42,7 @@ public class PostUpdateServletImpl extends HttpServlet {
             String message = foo.get("message");
             if (message == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "message required");
+                String st = ResponseMaker.makeResponse(status, "message required");
                 response.getWriter().print(st);
                 return;
             }
@@ -55,13 +53,13 @@ public class PostUpdateServletImpl extends HttpServlet {
                 } catch (NumberFormatException e){
                     e.printStackTrace();
                     status = 3;
-                    String st = responseMaker.makeResponse(status, "post id required");
+                    String st = ResponseMaker.makeResponse(status, "post id required");
                     response.getWriter().print(st);
                     return;
                 }
             } else {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "post id required");
+                String st = ResponseMaker.makeResponse(status, "post id required");
                 response.getWriter().print(st);
                 return;
             }
@@ -70,15 +68,15 @@ public class PostUpdateServletImpl extends HttpServlet {
             String st;
             if (resp == null) {
                 status = 1;
-                st = responseMaker.makeResponse(status, "post not found");
+                st = ResponseMaker.makeResponse(status, "post not found");
             } else {
-                st = responseMaker.makeResponse(status, resp);
+                st = ResponseMaker.makeResponse(status, resp);
             }
 
             response.getWriter().print(st);
         } else {
             status = 2;
-            String st = responseMaker.makeResponse(status, "impossible to parse json");
+            String st = ResponseMaker.makeResponse(status, "impossible to parse json");
             response.getWriter().print(st);
         }
     }

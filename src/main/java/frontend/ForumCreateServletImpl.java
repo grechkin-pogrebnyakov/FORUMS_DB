@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class ForumCreateServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public ForumCreateServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -44,18 +42,18 @@ public class ForumCreateServletImpl extends HttpServlet {
             String user = foo.get("user");
             if (name == null || short_name == null || user == null) {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "email required");
+                String st = ResponseMaker.makeResponse(status, "email required");
                 response.getWriter().print(st);
                 return;
             }
 
             MyJSONObject resp = databaseService.createForum(name, short_name, user);
-            String st = responseMaker.makeResponse(status, resp);
+            String st = ResponseMaker.makeResponse(status, resp);
             response.getWriter().print(st);
             st = "sdfsf";
         } else {
             status = 2;
-            String st = responseMaker.makeResponse(status, "impossible to parse json");
+            String st = ResponseMaker.makeResponse(status, "impossible to parse json");
             response.getWriter().print(st);
         }
 

@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class ThreadSubscribeServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public ThreadSubscribeServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doPost(HttpServletRequest request,
@@ -46,14 +44,14 @@ public class ThreadSubscribeServletImpl extends HttpServlet {
                 thread_id = new Integer(thread);
             } else {
                 status = 3;
-                String st = responseMaker.makeResponse(status, "thread id required");
+                String st = ResponseMaker.makeResponse(status, "thread id required");
                 response.getWriter().print(st);
                 return;
             }
             String user = foo.get("user");
             if (user == null){
                 status = 3;
-                String st = responseMaker.makeResponse(status, "user required");
+                String st = ResponseMaker.makeResponse(status, "user required");
                 response.getWriter().print(st);
                 return;
             }
@@ -63,12 +61,12 @@ public class ThreadSubscribeServletImpl extends HttpServlet {
             MyJSONObject resp = new MyJSONObject();
             resp.put("thread", thread_id);
             resp.put("user", user);
-            st = responseMaker.makeResponse(status, resp);
+            st = ResponseMaker.makeResponse(status, resp);
 //            System.out.append("thread remove response: " + st + "\n");
             response.getWriter().print(st);
         } else {
             status = 2;
-            String st = responseMaker.makeResponse(status, "impossible to parse json");
+            String st = ResponseMaker.makeResponse(status, "impossible to parse json");
             response.getWriter().print(st);
         }
     }

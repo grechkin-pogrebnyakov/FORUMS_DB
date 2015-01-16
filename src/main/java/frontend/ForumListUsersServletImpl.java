@@ -18,11 +18,9 @@ import java.util.Map;
  */
 public class ForumListUsersServletImpl extends HttpServlet {
     private DatabaseService databaseService;
-    private ResponseMaker responseMaker;
 
     public ForumListUsersServletImpl() {
-        this.databaseService= DBServiceImpl.getInstance();
-        this.responseMaker = ResponseMaker.getInstance();
+        this.databaseService = new DBServiceImpl();
     }
 
     public void doGet(HttpServletRequest request,
@@ -34,7 +32,7 @@ public class ForumListUsersServletImpl extends HttpServlet {
         String forum = request.getParameter("forum");
         if (forum == null) {
             status = 3;
-            String st = responseMaker.makeResponse(status, "incorrect request");
+            String st = ResponseMaker.makeResponse(status, "incorrect request");
             response.getWriter().println(st);
             return;
         }
@@ -60,14 +58,14 @@ public class ForumListUsersServletImpl extends HttpServlet {
             isAsc = true;
         } else {
             status = 3;
-            String st = responseMaker.makeResponse(status, "incorrect request");
+            String st = ResponseMaker.makeResponse(status, "incorrect request");
             response.getWriter().println(st);
             return;
         }
 //        System.out.append("forum list users request: " + request.getParameterMap() + "\n");
         MyJSONArray resp = databaseService.forumListUsers(forum, since_id, limit, isAsc);
         String st;
-        st = responseMaker.makeResponse(status, resp);
+        st = ResponseMaker.makeResponse(status, resp);
 //        System.out.append("forum list users response: " + st + "\n");
         response.getWriter().print(st);
     }
