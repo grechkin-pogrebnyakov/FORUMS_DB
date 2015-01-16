@@ -29,8 +29,8 @@ public class PreparedTExecutor {
         return value;
     }
 
-    public int execUpdate(Connection connection, String update,
-                           ArrayList params)
+    public int execInsert(Connection connection, String update,
+                          ArrayList params)
                 throws SQLException {
         int id = -1;
         try(PreparedStatement stmt = connection.prepareStatement(update)) {
@@ -49,5 +49,16 @@ public class PreparedTExecutor {
             connection.setAutoCommit(true);
         }
         return id;
+    }
+
+    public int execUpdate(Connection connection, String update,
+                          ArrayList params)
+            throws SQLException {
+        try(PreparedStatement stmt = connection.prepareStatement(update)) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            return stmt.executeUpdate();
+        }
     }
 }
