@@ -81,7 +81,7 @@ public class DBServiceImpl implements DatabaseService {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        if (id == 0) {
+        if (id == -1) {
             return null;
         }
         MyJSONObject resp = new MyJSONObject();
@@ -263,10 +263,12 @@ public class DBServiceImpl implements DatabaseService {
                             result.getString("forum_name"), result.getString("user_email"));
                 } else return null;
             });
-            if (rel_user) {
-                user = userDetails2(forum.GetUser(), connection);
-            } else {
-                user = forum.GetUser();
+            if (forum != null) {
+                if (rel_user) {
+                    user = userDetails2(forum.GetUser(), connection);
+                } else {
+                    user = forum.GetUser();
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -354,24 +356,25 @@ public class DBServiceImpl implements DatabaseService {
                             result.getString("title"), result.getString("user_email"));
                 } else return null;
             });
-
-            if (rel_forum) {
-                forum = forumDetails2(thread.GetForum(), connection);
-            } else {
-                forum = thread.GetForum();
-            }
-            if (rel_user) {
-                user = userDetails2(thread.GetUser(), connection);
-            } else {
-                user = thread.GetUser();
-            }
-            posts = executor.execQuery(connection, "SELECT COUNT(*) FROM Posts WHERE thread_id=? AND isDeleted=FALSE", params, result -> {
-                if (result.next()) {
-                    return result.getInt(1);
+            if (thread != null) {
+                if (rel_forum) {
+                    forum = forumDetails2(thread.GetForum(), connection);
                 } else {
-                    return -1;
+                    forum = thread.GetForum();
                 }
-            });
+                if (rel_user) {
+                    user = userDetails2(thread.GetUser(), connection);
+                } else {
+                    user = thread.GetUser();
+                }
+                posts = executor.execQuery(connection, "SELECT COUNT(*) FROM Posts WHERE thread_id=? AND isDeleted=FALSE", params, result -> {
+                    if (result.next()) {
+                        return result.getInt(1);
+                    } else {
+                        return -1;
+                    }
+                });
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -409,14 +412,15 @@ public class DBServiceImpl implements DatabaseService {
                         result.getString("title"), result.getString("user_email"));
             } else return null;
         });
-        posts = executor.execQuery(connection, "SELECT COUNT(*) FROM Posts WHERE thread_id=? AND isDeleted=FALSE", params, result -> {
-            if (result.next()) {
-                return result.getInt(1);
-            } else {
-                return -1;
-            }
-        });
-        if (thread == null ) {
+        if (thread != null) {
+            posts = executor.execQuery(connection, "SELECT COUNT(*) FROM Posts WHERE thread_id=? AND isDeleted=FALSE", params, result -> {
+                if (result.next()) {
+                    return result.getInt(1);
+                } else {
+                    return -1;
+                }
+            });
+        } else {
             return null;
         }
         MyJSONObject resp = new MyJSONObject();
@@ -510,7 +514,7 @@ public class DBServiceImpl implements DatabaseService {
             params.add(post_id);
             post = executor.execQuery(connection, "SELECT * FROM Posts WHERE post_id=?", params, result -> {
                 if (result.next()) {
-                    return new PostDataSet(result.getInt("thread_id") ,result.getString("created"), result.getInt("dislikes"),
+                    return new PostDataSet(result.getInt("post_id") ,result.getString("created"), result.getInt("dislikes"),
                             result.getString("forum_shortname"), result.getBoolean("isApproved"),
                             result.getBoolean("isDeleted"), result.getBoolean("isEdited"),
                             result.getBoolean("isHighlighted"), result.getBoolean("isSpam"),
@@ -518,20 +522,22 @@ public class DBServiceImpl implements DatabaseService {
                             result.getInt("thread_id"), result.getString("user_email"));
                 } else return null;
             });
-            if (rel_forum) {
-                forum = forumDetails2(post.GetForum(), connection);
-            } else {
-                forum = post.GetForum();
-            }
-            if (rel_thread) {
-                thread = threadDetails2(post.GetThread(), connection);
-            } else {
-                thread = post.GetThread();
-            }
-            if (rel_user) {
-                user = userDetails2(post.GetUser(), connection);
-            } else {
-                user = post.GetUser();
+            if (post != null) {
+                if (rel_forum) {
+                    forum = forumDetails2(post.GetForum(), connection);
+                } else {
+                    forum = post.GetForum();
+                }
+                if (rel_thread) {
+                    thread = threadDetails2(post.GetThread(), connection);
+                } else {
+                    thread = post.GetThread();
+                }
+                if (rel_user) {
+                    user = userDetails2(post.GetUser(), connection);
+                } else {
+                    user = post.GetUser();
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -568,7 +574,7 @@ public class DBServiceImpl implements DatabaseService {
         params.add(post_id);
         post = executor.execQuery(connection, "SELECT * FROM Posts WHERE post_id=?", params, result -> {
             if (result.next()) {
-                return new PostDataSet(result.getInt("thread_id") ,result.getString("created"), result.getInt("dislikes"),
+                return new PostDataSet(result.getInt("post_id") ,result.getString("created"), result.getInt("dislikes"),
                         result.getString("forum_shortname"), result.getBoolean("isApproved"),
                         result.getBoolean("isDeleted"), result.getBoolean("isEdited"),
                         result.getBoolean("isHighlighted"), result.getBoolean("isSpam"),
@@ -633,7 +639,7 @@ public class DBServiceImpl implements DatabaseService {
             posts = executor.execQuery(connection, query.toString(), params, result -> {
                 ArrayList<PostDataSet> posts1 = new ArrayList<>();
                 while (result.next()) {
-                    posts1.add(new PostDataSet(result.getInt("thread_id"), result.getString("created"), result.getInt("dislikes"),
+                    posts1.add(new PostDataSet(result.getInt("post_id"), result.getString("created"), result.getInt("dislikes"),
                             result.getString("forum_shortname"), result.getBoolean("isApproved"),
                             result.getBoolean("isDeleted"), result.getBoolean("isEdited"),
                             result.getBoolean("isHighlighted"), result.getBoolean("isSpam"),
@@ -690,7 +696,7 @@ public class DBServiceImpl implements DatabaseService {
     public int removePost(Integer post_id) {
         int rez = 0;
         try(Connection connection = ds.getConnection()) {
-            ArrayList<Object> params = new ArrayList<>();
+            ArrayList<Integer> params = new ArrayList<>();
             params.add(post_id);
             rez = executor.execUpdate(connection, "UPDATE Posts SET isDeleted=true WHERE post_id=?", params);
         } catch (SQLException e) {
@@ -736,7 +742,7 @@ public class DBServiceImpl implements DatabaseService {
             update = "UPDATE Posts SET dislikes=dislikes+1 WHERE post_id=?";
         }
         try(Connection connection = ds.getConnection()) {
-            ArrayList<Object> params = new ArrayList<>();
+            ArrayList<Object> params = new ArrayList<>(1);
             params.add(post_id);
             int rez = executor.execUpdate(connection, update, params);
             if (rez == 0) {
@@ -752,26 +758,22 @@ public class DBServiceImpl implements DatabaseService {
 
     public MyJSONArray threadList(String parent, boolean user_set, boolean rel_user,
                                   boolean rel_forum, String since, Integer limit, Boolean isAsc){
-        String date;
-        int dislikes;
+        ArrayList<ThreadDataSet> threads;
         Object forum;
-        boolean isClosed;
-        boolean isDeleted;
-        int likes;
-        String message;
-        int points;
-        int posts;
-        String slug;
-        String title;
         Object user;
-        int thread;
+        int posts;
+        ArrayList<Object> params = new ArrayList<>();
+        ArrayList<Integer> params1 = new ArrayList<>(1);
+        params1.add(1);
         StringBuilder query = new StringBuilder("SELECT * FROM Threads WHERE");
+        params.add(parent);
         if (user_set) {
             query.append(" user_email = ?");
         } else {
             query.append(" forum_shortname = ?");
         }
         if (since != null) {
+            params.add(since);
             query.append(" AND created >= ?");
         }
         query.append(" ORDER BY created");
@@ -779,76 +781,61 @@ public class DBServiceImpl implements DatabaseService {
             query.append(" DESC");
         }
         if (limit != null) {
+            params.add(limit);
             query.append(" LIMIT ?");
         }
         MyJSONArray rez = new MyJSONArray();
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
-                int iii = 1;
-                stmt.setString(iii, parent);
-                iii++;
-                if (since != null) {
-                    stmt.setString(iii, since);
-                    iii++;
-                }
-                if (limit != null) {
-                    stmt.setInt(iii, limit);
-                }
-//            System.out.append(stmt.toString());
-                ResultSet result = stmt.executeQuery();
+            threads = executor.execQuery(connection, query.toString(), params, result -> {
+                ArrayList<ThreadDataSet> threads1 = new ArrayList<>();
                 while (result.next()) {
-                    thread = result.getInt("thread_id");
-                    date = result.getString("created");
-                    date = date.substring(0, date.length() - 2);
-                    dislikes = result.getInt("dislikes");
-                    if (rel_forum) {
-                        forum = forumDetails2(result.getString("forum_shortname"), connection);
-                    } else {
-                        forum = result.getString("forum_shortname");
-                    }
-                    isClosed = result.getBoolean("isClosed");
-                    isDeleted = result.getBoolean("isDeleted");
-                    likes = result.getInt("likes");
-                    message = result.getString("message");
-                    points = likes - dislikes;
-                    slug = result.getString("slug");
-                    title = result.getString("title");
-                    if (rel_user) {
-                        user = userDetails2(result.getString("user_email"), connection);
-                    } else {
-                        user = result.getString("user_email");
-                    }
-                    try (PreparedStatement stmt1 = connection.prepareStatement(
-                            "SELECT COUNT(*) FROM Posts WHERE thread_id=? AND isDeleted=FALSE")) {
-                        stmt1.setInt(1, thread);
-                        ResultSet result1 = stmt1.executeQuery();
-                        result1.next();
-                        posts = result1.getInt(1);
-                    }
-                    MyJSONObject resp = new MyJSONObject();
-                    resp.put("date", date);
-                    resp.put("dislikes", dislikes);
-                    resp.put("forum", forum);
-                    resp.put("id", thread);
-                    resp.put("isClosed", isClosed);
-                    resp.put("isDeleted", isDeleted);
-                    resp.put("likes", likes);
-                    resp.put("message", message);
-                    resp.put("points", points);
-                    resp.put("posts", posts);
-                    resp.put("slug", slug);
-                    resp.put("title", title);
-                    resp.put("user", user);
-                    rez.put(resp);
+                    threads1.add(new ThreadDataSet(result.getInt("thread_id"), result.getString("created"), result.getInt("dislikes"),
+                            result.getString("forum_shortname"), result.getBoolean("isClosed"),
+                            result.getBoolean("isDeleted"), result.getInt("likes"),
+                            result.getString("message"), result.getString("slug"),
+                            result.getString("title"), result.getString("user_email")));
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
+                return threads1;
+            });
+            for (ThreadDataSet thread : threads) {
+                if (rel_forum) {
+                    forum = forumDetails2(thread.GetForum(), connection);
+                } else {
+                    forum = thread.GetForum();
+                }
+                if (rel_user) {
+                    user = userDetails2(thread.GetUser(), connection);
+                } else {
+                    user = thread.GetUser();
+                }
+                params1.set(0, thread.GetId());
+                posts = executor.execQuery(connection,
+                        "SELECT COUNT(*) FROM Posts WHERE thread_id=? AND isDeleted=FALSE", params1,
+                        result -> {
+                            if (result.next()) {
+                                return result.getInt(1);
+                            } else return 0;
+                        }
+                );
+                MyJSONObject resp = new MyJSONObject();
+                resp.put("date", thread.GetDate());
+                resp.put("dislikes", thread.GetDislikes());
+                resp.put("forum", forum);
+                resp.put("id", thread.GetId());
+                resp.put("isClosed", thread.GetIsClosed());
+                resp.put("isDeleted", thread.GetIsDeleted());
+                resp.put("likes", thread.GetLikes());
+                resp.put("message", thread.GetMessage());
+                resp.put("points", thread.GetPoints());
+                resp.put("posts", posts);
+                resp.put("slug", thread.GetSlug());
+                resp.put("title", thread.GetTitle());
+                resp.put("user", user);
+                rez.put(resp);
             }
-            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return rez;
     }
 
@@ -865,19 +852,10 @@ public class DBServiceImpl implements DatabaseService {
     public int removeThread(Integer thread_id) {
         int rez = 0;
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("UPDATE Threads SET isDeleted=true WHERE thread_id=?")) {
-                stmt.setInt(1, thread_id);
-                rez = stmt.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try (PreparedStatement stmt = connection.prepareStatement("UPDATE Posts SET isDeleted=true WHERE thread_id=?")) {
-                stmt.setInt(1, thread_id);
-                stmt.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            connection.close();
+            ArrayList<Integer> params = new ArrayList<>(1);
+            params.add(thread_id);
+            rez = executor.execUpdate(connection, "UPDATE Threads SET isDeleted=true WHERE thread_id=?", params);
+            executor.execUpdate(connection, "UPDATE Posts SET isDeleted=true WHERE thread_id=?", params);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -887,20 +865,10 @@ public class DBServiceImpl implements DatabaseService {
     public int restoreThread(Integer thread_id) {
         int rez = 0;
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement("UPDATE Threads SET isDeleted=false WHERE thread_id=?")) {
-                stmt.setInt(1, thread_id);
-                rez = stmt.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try (PreparedStatement stmt = connection.prepareStatement("UPDATE Posts SET isDeleted=false WHERE thread_id=?")) {
-                stmt.setInt(1, thread_id);
-                stmt.executeUpdate();
-                stmt.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            connection.close();
+            ArrayList<Integer> params = new ArrayList<>(1);
+            params.add(thread_id);
+            rez = executor.execUpdate(connection, "UPDATE Threads SET isDeleted=false WHERE thread_id=?", params);
+            executor.execUpdate(connection, "UPDATE Posts SET isDeleted=false WHERE thread_id=?", params);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -908,46 +876,45 @@ public class DBServiceImpl implements DatabaseService {
     }
 
     public int closeThread(Integer thread_id) {
-        try(Connection connection = ds.getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement("UPDATE Threads SET isClosed=true WHERE thread_id=?");
-            stmt.setInt(1, thread_id);
-            int rez = stmt.executeUpdate();
-            connection.close();
-            return rez;
+        int rez = 0;
+        try (Connection connection = ds.getConnection()) {
+            ArrayList<Integer> params = new ArrayList<>(1);
+            params.add(thread_id);
+            rez = executor.execUpdate(connection, "UPDATE Threads SET isClosed=true WHERE thread_id=?", params);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 0;
+        return rez;
     }
 
     public int openThread(Integer thread_id) {
-        try(Connection connection = ds.getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement("UPDATE Threads SET isClosed=false WHERE thread_id=?");
-            stmt.setInt(1, thread_id);
-            int rez = stmt.executeUpdate();
-            connection.close();
-            return rez;
+        int rez = 0;
+        try (Connection connection = ds.getConnection()) {
+            ArrayList<Integer> params = new ArrayList<>(1);
+            params.add(thread_id);
+            rez = executor.execUpdate(connection, "UPDATE Threads SET isClosed=false WHERE thread_id=?", params);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 0;
+        return rez;
     }
 
     public MyJSONObject updateThread(Integer thread_id, String message, String slug) {
-        try(Connection connection = ds.getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement("UPDATE Threads SET message=?, slug=? WHERE thread_id=?");
-            stmt.setString(1,message);
-            stmt.setString(2, slug);
-            stmt.setInt(3, thread_id);
-            int rez = stmt.executeUpdate();
-            connection.close();
+        try (Connection connection = ds.getConnection()) {
+            ArrayList<Object> params = new ArrayList<>(3);
+            params.add(message);
+            params.add(slug);
+            params.add(thread_id);
+            int rez = executor.execUpdate(connection, "UPDATE Threads SET message=?, slug=? WHERE thread_id=?", params);
             if (rez == 0) {
                 return null;
+            } else {
+                return threadDetails2(thread_id, connection);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return threadDetails(thread_id, false, false);
+        return null;
     }
 
     public MyJSONObject voteThread(Integer thread_id, Integer vote){
@@ -958,62 +925,49 @@ public class DBServiceImpl implements DatabaseService {
             update = "UPDATE Threads SET dislikes=dislikes+1 WHERE thread_id=?";
         }
         try(Connection connection = ds.getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement(update);
-            stmt.setInt(1, thread_id);
-            int rez = stmt.executeUpdate();
-            connection.close();
+            ArrayList<Object> params = new ArrayList<>(1);
+            params.add(thread_id);
+            int rez = executor.execUpdate(connection, update, params);
             if (rez == 0) {
                 return null;
+            } else {
+                return threadDetails2(thread_id, connection);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return threadDetails(thread_id, false, false);
+        return null;
     }
 
     public void subscribeThread(Integer thread_id, String user_email){
-        String update = "INSERT INTO Subscribers(user_email, thread_id) VALUES(?,?)";
-        try(Connection connection = ds.getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement(update);
-            stmt.setString(1, user_email);
-            stmt.setInt(2, thread_id);
-            stmt.executeUpdate();
-            connection.close();
+        try (Connection connection = ds.getConnection()) {
+            ArrayList<Object> params = new ArrayList<>(2);
+            params.add(user_email);
+            params.add(thread_id);
+            executor.execUpdate(connection, "INSERT INTO Subscribers(user_email, thread_id) VALUES(?,?)", params);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     public void unsubscribeThread(Integer thread_id, String user_email){
-        String update = " DELETE FROM Subscribers WHERE user_email=? AND thread_id=?";
-        try(Connection connection = ds.getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement(update);
-            stmt.setString(1, user_email);
-            stmt.setInt(2, thread_id);
-            stmt.executeUpdate();
-            connection.close();
+        try (Connection connection = ds.getConnection()) {
+            ArrayList<Object> params = new ArrayList<>(2);
+            params.add(user_email);
+            params.add(thread_id);
+            executor.execUpdate(connection, "DELETE FROM Subscribers WHERE user_email=? AND thread_id=?", params);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     public MyJSONArray userListPosts(String user, String since, Integer limit, Boolean isAsc){
-        int post_id;
-        String date;
-        int dislikes;
-        Object forum;
-        boolean isApproved;
-        boolean isDeleted;
-        boolean isEdited;
-        boolean isHighlighted;
-        boolean isSpam;
-        int likes;
-        String message;
-        Integer parent;
-        int points = 0;
-        Object thread;
+        ArrayList<PostDataSet> posts;
+        ArrayList<Object> params = new ArrayList<>(3);
+        params.add(user);
         StringBuilder query = new StringBuilder("SELECT * FROM Posts WHERE user_email = ?");
         if (since != null) {
+            params.add(since);
             query.append(" AND created >= ?");
         }
         query.append(" ORDER BY created");
@@ -1021,111 +975,94 @@ public class DBServiceImpl implements DatabaseService {
             query.append(" DESC");
         }
         if (limit != null) {
+            params.add(limit);
             query.append(" LIMIT ?");
         }
         MyJSONArray rez = new MyJSONArray();
         try(Connection connection = ds.getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement(query.toString());
-            int iii = 1;
-            stmt.setString(iii, user);
-            iii++;
-            if (since != null) {
-                stmt.setString(iii,since);
-                iii++;
-            }
-            if (limit != null) {
-                stmt.setInt(iii, limit);
-            }
-//            System.out.append(stmt.toString());
-            ResultSet result = stmt.executeQuery();
-            while (result.next()) {
-                post_id = result.getInt("post_id");
-                date = result.getString("created");
-                date = date.substring(0, date.length() - 2);
-                dislikes = result.getInt("dislikes");
-                forum = result.getString("forum_shortname");
-                isApproved = result.getBoolean("isApproved");
-                isDeleted = result.getBoolean("isDeleted");
-                isEdited = result.getBoolean("isEdited");
-                isHighlighted = result.getBoolean("isHighlighted");
-                isSpam = result.getBoolean("isSpam");
-                likes = result.getInt("likes");
-                message = result.getString("message");
-                points = likes-dislikes;
-                parent = result.getInt("parent");
-                thread = result.getInt("thread_id");
+            posts = executor.execQuery(connection, query.toString(), params, result -> {
+                int i = 0;
+                while (result.next()) i++;
+                result.beforeFirst();
+                ArrayList<PostDataSet> posts1 = new ArrayList<>(i);
+                while (result.next()) {
+                    posts1.add(new PostDataSet(result.getInt("post_id") ,result.getString("created"), result.getInt("dislikes"),
+                            result.getString("forum_shortname"), result.getBoolean("isApproved"),
+                            result.getBoolean("isDeleted"), result.getBoolean("isEdited"),
+                            result.getBoolean("isHighlighted"), result.getBoolean("isSpam"),
+                            result.getInt("likes"), result.getString("message"), result.getInt("parent"),
+                            result.getInt("thread_id"), result.getString("user_email")));
+                }
+                return posts1;
+            });
+                for (PostDataSet post : posts) {
                 MyJSONObject resp = new MyJSONObject();
-                resp.put("date", date);
-                resp.put("dislikes", dislikes);
-                resp.put("forum", forum);
-                resp.put("id", post_id);
-                resp.put("isApproved", isApproved);
-                resp.put("isEdited", isEdited);
-                resp.put("isHighlighted", isHighlighted);
-                resp.put("isSpam", isSpam);
-                resp.put("isDeleted", isDeleted);
-                resp.put("likes", likes);
-                resp.put("message", message);
-                if (parent.equals(0))
-                    parent = null;
-                resp.put("parent", parent);
-                resp.put("points", points);
-                resp.put("thread", thread);
+                resp.put("date", post.GetDate());
+                resp.put("dislikes", post.GetDislikes());
+                resp.put("forum", post.GetForum());
+                resp.put("id", post.GetId());
+                resp.put("isApproved", post.GetIsApproved());
+                resp.put("isEdited", post.GetIsEdited());
+                resp.put("isHighlighted", post.GetIsHighlighted());
+                resp.put("isSpam", post.GetIsSpam());
+                resp.put("isDeleted", post.GetIsDeleted());
+                resp.put("likes", post.GetLikes());
+                resp.put("message", post.GetMessage());
+                if (post.GetParent().equals(0)) {
+                    resp.put("parent", (Integer)null);
+                } else {
+                    resp.put("parent", post.GetParent());
+                }
+                resp.put("points", post.GetPoints());
+                resp.put("thread", post.GetThread());
                 resp.put("user", user);
                 rez.put(resp);
             }
-            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return rez;
     }
 
     public MyJSONObject updateUserProfile(String email, String name, String about) {
         try(Connection connection = ds.getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement("UPDATE Users SET name=?, about=? WHERE user_email=?");
-            stmt.setString(1,name);
-            stmt.setString(2, about);
-            stmt.setString(3, email);
-            int rez = stmt.executeUpdate();
-            connection.close();
+            ArrayList<String> params = new ArrayList<>(3);
+            params.add(name);
+            params.add(about);
+            params.add(email);
+            int rez = executor.execUpdate(connection, "UPDATE Users SET name=?, about=? WHERE user_email=?", params);
             if (rez == 0) {
                 return null;
-            }
+            } else return userDetails2(email, connection);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return userDetails(email);
+        return null;
     }
 
     public MyJSONObject followUser(String follower, String followee){
-        String update = "INSERT INTO Follows(follower, following) VALUES(?,?)";
         try(Connection connection = ds.getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement(update);
-            stmt.setString(1, follower);
-            stmt.setString(2, followee);
-            stmt.executeUpdate();
-            connection.close();
+            ArrayList<String> params = new ArrayList<>(2);
+            params.add(follower);
+            params.add(followee);
+            executor.execUpdate(connection, "INSERT INTO Follows(follower, following) VALUES(?,?)", params);
+            return userDetails2(follower, connection);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return userDetails(follower);
+        return null;
     }
 
-    public MyJSONArray userListFollowers(String user, Integer since_id, Integer limit, Boolean isAsc){
-        int id;
-        String about;
-        boolean isAn;
-        String name;
-        String username;
-        ArrayList<String> followers = null;
-        ArrayList<String> following = null;
-        ArrayList<Integer> subscr = null;
-        String email;
+    public MyJSONArray userListFollowers(String user_email, Integer since_id, Integer limit, Boolean isAsc){
+        ArrayList<UserDataSet> users;
+        ArrayList<String> params1 = new ArrayList<>(1);
+        params1.add("");
+        ArrayList<Object> params = new ArrayList<>(3);
+        params.add(user_email);
         StringBuilder query =
                 new StringBuilder("SELECT * FROM Users INNER JOIN Follows ON Users.user_email=Follows.follower WHERE following = ?");
         if (since_id != null) {
+            params.add(since_id);
             query.append(" AND user_id >= ?");
         }
         query.append(" ORDER BY name");
@@ -1133,96 +1070,80 @@ public class DBServiceImpl implements DatabaseService {
             query.append(" DESC");
         }
         if (limit != null) {
+            params.add(limit);
             query.append(" LIMIT ?");
         }
         MyJSONArray rez = new MyJSONArray();
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
-                int iii = 1;
-                stmt.setString(iii, user);
-                iii++;
-                if (since_id != null) {
-                    stmt.setInt(iii, since_id);
-                    iii++;
-                }
-                if (limit != null) {
-                    stmt.setInt(iii, limit);
-                }
-//            System.out.append(query);
-                ResultSet result = stmt.executeQuery();
+            users = executor.execQuery(connection, query.toString(), params, result -> {
+                int i = 0;
+                while (result.next()) i++;
+                result.beforeFirst();
+                ArrayList<UserDataSet> users1 = new ArrayList<>(i);
                 while (result.next()) {
-                    id = result.getInt("user_id");
-                    about = result.getString("about");
-                    isAn = result.getBoolean("isAnonymous");
-                    name = result.getString("name");
-                    username = result.getString("username");
-                    email = result.getString("user_email");
-                    try (PreparedStatement stmt1 = connection.prepareStatement("SELECT follower FROM Follows WHERE following=?")) {
-                        stmt1.setString(1, email);
-                        ResultSet result1 = stmt1.executeQuery();
-                        followers = new ArrayList<>();
-                        while (result1.next()) {
-                            followers.add(result1.getString(1));
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    try (PreparedStatement stmt1 = connection.prepareStatement("SELECT following FROM Follows WHERE follower=?")) {
-                        stmt1.setString(1, email);
-                        ResultSet result1 = stmt1.executeQuery();
-                        following = new ArrayList<>();
-                        while (result1.next()) {
-                            following.add(result1.getString(1));
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    try (PreparedStatement stmt1 = connection.prepareStatement("SELECT thread_id FROM Subscribers WHERE user_email=?")) {
-                        stmt1.setString(1, email);
-                        ResultSet result1 = stmt1.executeQuery();
-                        subscr = new ArrayList<>();
-                        while (result1.next()) {
-                            subscr.add(result1.getInt(1));
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    MyJSONObject resp = new MyJSONObject();
-                    resp.put("about", about);
-                    resp.put("email", email);
-                    resp.put("followers", followers);
-                    resp.put("following", following);
-                    resp.put("id", id);
-                    resp.put("isAnonymous", isAn);
-                    resp.put("name", name);
-                    resp.put("subscriptions", subscr);
-                    resp.put("username", username);
-                    rez.put(resp);
+                    users1.add(new UserDataSet(result.getInt("user_id"), result.getString("username"),
+                            result.getString("user_email"), result.getString("about"),
+                            result.getBoolean("isAnonymous"), result.getString("name")));
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
+                return users1;
+            });
+            for (UserDataSet user: users) {
+                params1.set(0, user.GetEmail());
+                ArrayList<String> followers = executor.execQuery(connection, "SELECT follower FROM Follows WHERE following=?",
+                        params1, result -> {
+                            ArrayList<String> followers1 = new ArrayList<>();
+                            while (result.next()) {
+                                followers1.add(result.getString(1));
+                            }
+                            return followers1;
+                        }
+                );
+                ArrayList<String> following = executor.execQuery(connection, "SELECT following FROM Follows WHERE follower=?",
+                        params1, result -> {
+                            ArrayList<String> following1 = new ArrayList<>();
+                            while (result.next()) {
+                                following1.add(result.getString(1));
+                            }
+                            return following1;
+                        }
+                );
+                ArrayList<Integer> subscr = executor.execQuery(connection, "SELECT thread_id FROM Subscribers WHERE user_email=?",
+                        params1, result -> {
+                            ArrayList<Integer> subscr1 = new ArrayList<>();
+                            while (result.next()) {
+                                subscr1.add(result.getInt(1));
+                            }
+                            return subscr1;
+                        }
+                );
+                MyJSONObject resp = new MyJSONObject();
+                resp.put("about", user.GetAbout());
+                resp.put("email", user.GetEmail());
+                resp.put("followers", followers);
+                resp.put("following", following);
+                resp.put("id", user.GetId());
+                resp.put("isAnonymous", user.GetIsAn());
+                resp.put("name", user.GetName());
+                resp.put("subscriptions", subscr);
+                resp.put("username", user.GetUsername());
+                rez.put(resp);
             }
-            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return rez;
     }
 
-    public MyJSONArray userListFollowing(String user, Integer since_id, Integer limit, Boolean isAsc){
-        int id;
-        String about;
-        boolean isAn;
-        String name;
-        String username;
-        ArrayList<String> followers = null;
-        ArrayList<String> following = null;
-        ArrayList<Integer> subscr = null;
-        String email;
+    public MyJSONArray userListFollowing(String user_email, Integer since_id, Integer limit, Boolean isAsc){
+        ArrayList<UserDataSet> users;
+        ArrayList<String> params1 = new ArrayList<>(1);
+        params1.add("");
+        ArrayList<Object> params = new ArrayList<>(3);
+        params.add(user_email);
         StringBuilder query =
                 new StringBuilder("SELECT * FROM Users INNER JOIN Follows ON Users.user_email=Follows.following WHERE follower = ?");
         if (since_id != null) {
+            params.add(since_id);
             query.append(" AND user_id >= ?");
         }
         query.append(" ORDER BY name");
@@ -1230,76 +1151,64 @@ public class DBServiceImpl implements DatabaseService {
             query.append(" DESC");
         }
         if (limit != null) {
+            params.add(limit);
             query.append(" LIMIT ?");
         }
         MyJSONArray rez = new MyJSONArray();
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
-                int iii = 1;
-                stmt.setString(iii, user);
-                iii++;
-                if (since_id != null) {
-                    stmt.setInt(iii, since_id);
-                    iii++;
-                }
-                if (limit != null) {
-                    stmt.setInt(iii, limit);
-                }
-//            System.out.append(query);
-                ResultSet result = stmt.executeQuery();
+            users = executor.execQuery(connection, query.toString(), params, result -> {
+                int i = 0;
+                while (result.next()) i++;
+                result.beforeFirst();
+                ArrayList<UserDataSet> users1 = new ArrayList<>(i);
                 while (result.next()) {
-                    id = result.getInt("user_id");
-                    about = result.getString("about");
-                    isAn = result.getBoolean("isAnonymous");
-                    name = result.getString("name");
-                    username = result.getString("username");
-                    email = result.getString("user_email");
-                    try (PreparedStatement stmt1 = connection.prepareStatement("SELECT follower FROM Follows WHERE following=?")) {
-                        stmt1.setString(1, email);
-                        ResultSet result1 = stmt1.executeQuery();
-                        followers = new ArrayList<>();
-                        while (result1.next()) {
-                            followers.add(result1.getString(1));
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    try (PreparedStatement stmt1 = connection.prepareStatement("SELECT following FROM Follows WHERE follower=?")) {
-                        stmt1.setString(1, email);
-                        ResultSet result1 = stmt1.executeQuery();
-                        following = new ArrayList<>();
-                        while (result1.next()) {
-                            following.add(result1.getString(1));
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    try (PreparedStatement stmt1 = connection.prepareStatement("SELECT thread_id FROM Subscribers WHERE user_email=?")) {
-                        stmt1.setString(1, email);
-                        ResultSet result1 = stmt1.executeQuery();
-                        subscr = new ArrayList<>();
-                        while (result1.next()) {
-                            subscr.add(result1.getInt(1));
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    MyJSONObject resp = new MyJSONObject();
-                    resp.put("about", about);
-                    resp.put("email", email);
-                    resp.put("followers", followers);
-                    resp.put("following", following);
-                    resp.put("id", id);
-                    resp.put("isAnonymous", isAn);
-                    resp.put("name", name);
-                    resp.put("subscriptions", subscr);
-                    resp.put("username", username);
-                    rez.put(resp);
+                    users1.add(new UserDataSet(result.getInt("user_id"), result.getString("username"),
+                            result.getString("user_email"), result.getString("about"),
+                            result.getBoolean("isAnonymous"), result.getString("name")));
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
+                return users1;
+            });
+            for (UserDataSet user: users) {
+                params1.set(0, user.GetEmail());
+                ArrayList<String> followers = executor.execQuery(connection, "SELECT follower FROM Follows WHERE following=?",
+                        params1, result -> {
+                            ArrayList<String> followers1 = new ArrayList<>();
+                            while (result.next()) {
+                                followers1.add(result.getString(1));
+                            }
+                            return followers1;
+                        }
+                );
+                ArrayList<String> following = executor.execQuery(connection, "SELECT following FROM Follows WHERE follower=?",
+                        params1, result -> {
+                            ArrayList<String> following1 = new ArrayList<>();
+                            while (result.next()) {
+                                following1.add(result.getString(1));
+                            }
+                            return following1;
+                        }
+                );
+                ArrayList<Integer> subscr = executor.execQuery(connection, "SELECT thread_id FROM Subscribers WHERE user_email=?",
+                        params1, result -> {
+                            ArrayList<Integer> subscr1 = new ArrayList<>();
+                            while (result.next()) {
+                                subscr1.add(result.getInt(1));
+                            }
+                            return subscr1;
+                        }
+                );
+                MyJSONObject resp = new MyJSONObject();
+                resp.put("about", user.GetAbout());
+                resp.put("email", user.GetEmail());
+                resp.put("followers", followers);
+                resp.put("following", following);
+                resp.put("id", user.GetId());
+                resp.put("isAnonymous", user.GetIsAn());
+                resp.put("name", user.GetName());
+                resp.put("subscriptions", subscr);
+                resp.put("username", user.GetUsername());
+                rez.put(resp);
             }
-            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -1307,33 +1216,29 @@ public class DBServiceImpl implements DatabaseService {
     }
 
     public MyJSONObject unfollowUser(String follower, String followee){
-        String update = "DELETE FROM Follows WHERE follower=? AND following=?";
         try(Connection connection = ds.getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement(update);
-            stmt.setString(1, follower);
-            stmt.setString(2, followee);
-            stmt.executeUpdate();
-            connection.close();
+            ArrayList<String> params = new ArrayList<>(2);
+            params.add(follower);
+            params.add(followee);
+            executor.execUpdate(connection, "DELETE FROM Follows WHERE follower=? AND following=?", params);
+            return userDetails2(follower, connection);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return userDetails(follower);
+        return null;
     }
 
     public MyJSONArray forumListUsers(String forum, Integer since_id, Integer limit, Boolean isAsc) {
-        int id;
-        String about;
-        boolean isAn;
-        String name;
-        String username;
-        ArrayList<String> followers = null;
-        ArrayList<String> following = null;
-        ArrayList<Integer> subscr = null;
-        String email;
+        ArrayList<UserDataSet> users;
+        ArrayList<String> params1 = new ArrayList<>(1);
+        params1.add("");
+        ArrayList<Object> params = new ArrayList<>(3);
+        params.add(forum);
         StringBuilder query =
                 new StringBuilder("SELECT user_id, about, isAnonymous, name, username, Users.user_email FROM " +
                         "Users LEFT JOIN Posts ON Users.user_email=Posts.user_email WHERE forum_shortname = ?");
         if (since_id != null) {
+            params.add(since_id);
             query.append(" AND user_id >= ?");
         }
         query.append(" GROUP BY user_id");
@@ -1342,80 +1247,67 @@ public class DBServiceImpl implements DatabaseService {
             query.append(" DESC");
         }
         if (limit != null) {
+            params.add(limit);
             query.append(" LIMIT ?");
         }
         MyJSONArray rez = new MyJSONArray();
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
-                int iii = 1;
-                stmt.setString(iii, forum);
-                iii++;
-                if (since_id != null) {
-                    stmt.setInt(iii, since_id);
-                    iii++;
-                }
-                if (limit != null) {
-                    stmt.setInt(iii, limit);
-                }
-//            System.out.println(stmt.toString());
-                ResultSet result = stmt.executeQuery();
+            users = executor.execQuery(connection, query.toString(), params, result -> {
+                int i = 0;
+                while (result.next()) i++;
+                result.beforeFirst();
+                ArrayList<UserDataSet> users1 = new ArrayList<>(i);
                 while (result.next()) {
-                    id = result.getInt("user_id");
-                    about = result.getString("about");
-                    isAn = result.getBoolean("isAnonymous");
-                    name = result.getString("name");
-                    username = result.getString("username");
-                    email = result.getString("user_email");
-                    try (PreparedStatement stmt1 = connection.prepareStatement("SELECT follower FROM Follows WHERE following=?")) {
-                        stmt1.setString(1, email);
-                        ResultSet result1 = stmt1.executeQuery();
-                        followers = new ArrayList<>();
-                        while (result1.next()) {
-                            followers.add(result1.getString(1));
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    try (PreparedStatement stmt1 = connection.prepareStatement("SELECT following FROM Follows WHERE follower=?")) {
-                        stmt1.setString(1, email);
-                        ResultSet result1 = stmt1.executeQuery();
-                        following = new ArrayList<>();
-                        while (result1.next()) {
-                            following.add(result1.getString(1));
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    try (PreparedStatement stmt1 = connection.prepareStatement("SELECT thread_id FROM Subscribers WHERE user_email=?")) {
-                        stmt1.setString(1, email);
-                        ResultSet result1 = stmt1.executeQuery();
-                        subscr = new ArrayList<>();
-                        while (result1.next()) {
-                            subscr.add(result1.getInt(1));
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    MyJSONObject resp = new MyJSONObject();
-                    resp.put("about", about);
-                    resp.put("email", email);
-                    resp.put("followers", followers);
-                    resp.put("following", following);
-                    resp.put("id", id);
-                    resp.put("isAnonymous", isAn);
-                    resp.put("name", name);
-                    resp.put("subscriptions", subscr);
-                    resp.put("username", username);
-                    rez.put(resp);
+                    users1.add(new UserDataSet(result.getInt("user_id"), result.getString("username"),
+                            result.getString("user_email"), result.getString("about"),
+                            result.getBoolean("isAnonymous"), result.getString("name")));
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
+                return users1;
+            });
+            for (UserDataSet user: users) {
+                params1.set(0, user.GetEmail());
+                ArrayList<String> followers = executor.execQuery(connection, "SELECT follower FROM Follows WHERE following=?",
+                        params1, result -> {
+                            ArrayList<String> followers1 = new ArrayList<>();
+                            while (result.next()) {
+                                followers1.add(result.getString(1));
+                            }
+                            return followers1;
+                        }
+                );
+                ArrayList<String> following = executor.execQuery(connection, "SELECT following FROM Follows WHERE follower=?",
+                        params1, result -> {
+                            ArrayList<String> following1 = new ArrayList<>();
+                            while (result.next()) {
+                                following1.add(result.getString(1));
+                            }
+                            return following1;
+                        }
+                );
+                ArrayList<Integer> subscr = executor.execQuery(connection, "SELECT thread_id FROM Subscribers WHERE user_email=?",
+                        params1, result -> {
+                            ArrayList<Integer> subscr1 = new ArrayList<>();
+                            while (result.next()) {
+                                subscr1.add(result.getInt(1));
+                            }
+                            return subscr1;
+                        }
+                );
+                MyJSONObject resp = new MyJSONObject();
+                resp.put("about", user.GetAbout());
+                resp.put("email", user.GetEmail());
+                resp.put("followers", followers);
+                resp.put("following", following);
+                resp.put("id", user.GetId());
+                resp.put("isAnonymous", user.GetIsAn());
+                resp.put("name", user.GetName());
+                resp.put("subscriptions", subscr);
+                resp.put("username", user.GetUsername());
+                rez.put(resp);
             }
-            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return rez;
     }
 

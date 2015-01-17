@@ -48,7 +48,13 @@ public class ForumCreateServletImpl extends HttpServlet {
             }
 
             MyJSONObject resp = databaseService.createForum(name, short_name, user);
-            String st = ResponseMaker.makeResponse(status, resp);
+            String st;
+            if (resp == null) {
+                status = 4;
+                st = ResponseMaker.makeResponse(status, "we have got some problem");
+            } else {
+                st = ResponseMaker.makeResponse(status, resp);
+            }
             response.getWriter().print(st);
             st = "sdfsf";
         } else {
