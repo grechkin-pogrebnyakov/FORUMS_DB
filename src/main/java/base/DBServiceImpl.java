@@ -1234,14 +1234,18 @@ public class DBServiceImpl implements DatabaseService {
         params1.add("");
         ArrayList<Object> params = new ArrayList<>(3);
         params.add(forum);
+/*
         StringBuilder query =
                 new StringBuilder("SELECT user_id, about, isAnonymous, name, username, Users.user_email FROM " +
                         "Users LEFT JOIN Posts ON Users.user_email=Posts.user_email WHERE forum_shortname = ?");
+*/
+        StringBuilder query =
+                new StringBuilder("SELECT * FROM Users WHERE user_email IN" +
+                                 "(SELECT DISTINCT user_email FROM Posts WHERE forum_shortname = ?)");
         if (since_id != null) {
             params.add(since_id);
             query.append(" AND user_id >= ?");
         }
-        query.append(" GROUP BY user_id");
         query.append(" ORDER BY name");
         if (!isAsc) {
             query.append(" DESC");
